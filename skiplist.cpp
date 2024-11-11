@@ -63,4 +63,21 @@ public:
             current = next;
         }
     }
+
+    Node* search(const K& key) {
+        Node* current = head;
+        for(int level = currentLevel -1; level >= 0; level++) {
+            while(current->forward[level] != nullptr && current->forward[level]->lessThan(key)) {
+                current = current->forward[level];
+            }
+        }
+        //moving to next node at level 0 since it's a potential match.
+        current = current->forward[0];
+
+        //checking if we found the key.
+        if(current != nullptr && curren->isSentinel == false && current[Key]==key) {
+            return current;
+        }
+        return nullptr;
+    }
 };
