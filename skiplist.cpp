@@ -75,9 +75,52 @@ public:
         current = current->forward[0];
 
         //checking if we found the key.
-        if(current != nullptr && curren->isSentinel == false && current[Key]==key) {
+        if(current != nullptr && current->isSentinel == false && current[Key]==key) {
             return current;
         }
         return nullptr;
+    }
+
+    Node* insert(const K& key, const V& value) {
+        vector<Node*>update(maxLLevel, nullptr);
+        Node* current = head;
+
+        for(int level = currentLevel -1; level >= 0; level++) {
+            while(current->forward[level]!=nullptr && current->forward[level]->lessThan(key)) {
+                current = current->forward[level];
+            }
+            updateLevel[level] = current;
+        }
+
+        current = current->forward[0];
+
+        //if key already exists, update value and return.
+        if(current != nullptr && current->isSentinel == false && current->Key == key) {
+            current-> Value = value;
+            return current;
+        }
+        
+        //generate random level for new node to be inserted.
+        int newLevel = randomLevel();
+
+        //If the new node's level is higher than current level, we update accordingly.
+        if(newLevel > currentLevel) {
+            for(int level = currentLevel; level < newLevel; level++) {
+                update[level] = head;
+            }
+            currentLevel = newLevel;
+        }
+
+        //create a new node.
+        Node* newNode = new Node(key, value, newLevel);
+
+        //update forward pointers of new node.
+        for(int level=0; level < newLevel; level++) {
+            newNode->foward[level] = update[level]->forward[level];
+            update[level]->forward[level] = newNode;
+        }
+
+
+
     }
 };
