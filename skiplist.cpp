@@ -25,13 +25,6 @@ private:
             forward = vector<Node*>(level,nullptr);
             isSentinel = true;
         }
-
-        bool lessThan(const K& otherKey) const {//const K& because we don't want Key to be copied when passing between functions.
-            if(isSentinel) {
-                return true;
-            }
-            return Key<otherKey;
-        }
     };
 
     Node* head;
@@ -74,7 +67,7 @@ public:
     Node* search(const K& key) {
         Node* current = head;
         for(int level = currentLevel -1; level >= 0; level--) {
-            while(current->forward[level] != nullptr && current->forward[level]->lessThan(key)) {
+            while(current->forward[level] != nullptr && current->forward[level]->isSentinel == false && current->forward[level]->Key<key) {
                 current = current->forward[level];
             }
         }
@@ -97,7 +90,7 @@ public:
         Node* currNode = head;
 
         for(int level=currentLevel-1;level>=0;level--) {
-            while(currNode->forward[level]!=nullptr && currNode->forward[level]->lessThan(key)) {
+            while(currNode->forward[level]!=nullptr && currNode->forward[level]->isSentinel == false && currNode->forward[level]->Key < key) {
                 currNode = currNode->forward[level];
             }
             update[level] = currNode;
@@ -126,8 +119,42 @@ public:
         return newNode;
     }
 
+    bool remove(const K& key) {
+        Node* currNode = head;
+        vector<Node*>update(maxLevel,nullptr);
+        for(int level = currentLevel-1; level>=0;level--) {
+            while(currNode->forward[level]!=nullptr && currNode->forward[level]->isSentinel == false && currNode->forward[level]->Key<key) {
+                currNode = currNode->forward[level];
+            }
+            update[level] = currNode;
+        }
+
+        currNode = currNode->forward[0];  
+
+        if(currNode==nullptr || currNode->isSentinel || currNode->Key!=key) {
+            return false;
+        }
+
+        // Update forward pointers for all levels where this node exists.
+        int nodeLevel = currNode->forward.size();
+        for(int level = 0;level<nodeLevel;level++) {
+            update[level]->forward[level] = currNode->forward[level];
+        }
+
+        // Find new currentLevel by starting from top and finding first level with a node.
+        int level = maxLevel-1;
+        while(level>=0 && head->forward[level] == nullptr) {
+            level --;
+        }
+        currentLevel = level+1;
+
+        delete currNode;
+        return true;
+
+    }
+
     void display() {
-        cout<<"\n SkipList"<<endl;
+        cout<<"\nSkipList"<<endl;
 
         for(int level = currentLevel-1; level>=0;level--) {
             cout<< "Level" << level<<":";
@@ -153,11 +180,7 @@ int main() {
     SkipList<string, int> list;
 
     list.insert("one",1);
-    cout << "After inserting one:" << endl;
-
     list.insert("two",2);
-    cout << "After inserting two:" << endl;
-
     list.insert("three",3);
     cout << "After inserting three:" << endl;
 
@@ -168,8 +191,17 @@ int main() {
         cout<<"element not present"<<endl;
     }
     else {
-        cout<<result->Key<<" present with value: "<< result->Value;
+        cout<<result->Key<<" present with value: "<< result->Value<<endl;
     }
+
+    bool removed = list.remove("one");
+    if(removed){
+        cout<<"key removed"<<endl;
+    }
+    else{
+        cout<<"key not found"<<endl;
+    }
+    list.display();
 
     return 0;
 }
