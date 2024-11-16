@@ -1,8 +1,10 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <random>  
 
 using namespace std;
+
 template<typename K,typename V>
 class SkipList {
 private:
@@ -123,4 +125,51 @@ public:
         }
         return newNode;
     }
+
+    void display() {
+        cout<<"\n SkipList"<<endl;
+
+        for(int level = currentLevel-1; level>=0;level--) {
+            cout<< "Level" << level<<":";
+            Node* currNode = head;
+
+            while(currNode!=nullptr) {
+                if(currNode->isSentinel) {
+                    cout<<"head->";
+                }
+                else {
+                    cout<<currNode->Key<<"("<<currNode->Value<<") -> ";
+                }
+                currNode = currNode->forward[level];
+            }
+            cout<<"nullptr"<<endl;
+        }
+        cout<<endl;
+    }
 };
+
+
+int main() {
+    SkipList<string, int> list;
+
+    list.insert("one",1);
+    cout << "After inserting one:" << endl;
+
+    list.insert("two",2);
+    cout << "After inserting two:" << endl;
+
+    list.insert("three",3);
+    cout << "After inserting three:" << endl;
+
+    list.display();
+
+    auto result = list.search("one");
+    if(result == nullptr) {
+        cout<<"element not present"<<endl;
+    }
+    else {
+        cout<<result->Key<<" present with value: "<< result->Value;
+    }
+
+    return 0;
+}
