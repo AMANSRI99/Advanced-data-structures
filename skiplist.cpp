@@ -1,3 +1,8 @@
+#include <vector>
+#include <string>
+#include <iostream>
+
+using namespace std;
 template<typename K,typename V>
 class SkipList {
 private:
@@ -47,12 +52,12 @@ public:
     SkipList(int maxLvl =16, float p =0.5) {
         maxLevel = maxLvl;
         probability = p;
-        currentLevel =1;
+        currentLevel =1;//highest level in the node.
         // Initializing random generator
         gen = std::mt19937(rd());
         dis = std::uniform_real_distribution<>(0.0, 1.0);
 
-        head = new Node(maxLvl)
+        head = new Node(maxLvl);
     }
 
     ~SkipList() {
@@ -66,7 +71,7 @@ public:
 
     Node* search(const K& key) {
         Node* current = head;
-        for(int level = currentLevel -1; level >= 0; level++) {
+        for(int level = currentLevel -1; level >= 0; level--) {
             while(current->forward[level] != nullptr && current->forward[level]->lessThan(key)) {
                 current = current->forward[level];
             }
@@ -75,52 +80,47 @@ public:
         current = current->forward[0];
 
         //checking if we found the key.
-        if(current != nullptr && current->isSentinel == false && current[Key]==key) {
+        if(current != nullptr && current->isSentinel == false && current->Key==key) {
             return current;
         }
         return nullptr;
     }
 
+    /*the general intuition is that we start at top left and move right untile we find a value that is greater that the the key we want to insert.
+    When we do find it,we store(in update array) the last node that was less than our key and we move down to a lesser level and we repeat the same.
+    when we have found where to insert our new node, we update the forward pointers of the new node and the last node that was less than our key(to new node).*/
     Node* insert(const K& key, const V& value) {
-        vector<Node*>update(maxLLevel, nullptr);
-        Node* current = head;
+        vector<Node*>update(maxLevel,nullptr);
 
-        for(int level = currentLevel -1; level >= 0; level++) {
-            while(current->forward[level]!=nullptr && current->forward[level]->lessThan(key)) {
-                current = current->forward[level];
+        Node* currNode = head;
+
+        for(int level=currentLevel-1;level>=0;level--) {
+            while(currNode->forward[level]!=nullptr && currNode->forward[level]->lessThan(key)) {
+                currNode = currNode->forward[level];
             }
-            updateLevel[level] = current;
+            update[level] = currNode;
         }
 
-        current = current->forward[0];
+        currNode = currNode->forward[0];
 
-        //if key already exists, update value and return.
-        if(current != nullptr && current->isSentinel == false && current->Key == key) {
-            current-> Value = value;
-            return current;
+        if(currNode!=nullptr && currNode->isSentinel==false && currNode->Key==key) {
+            currNode->Value = value;
+            return currNode;
         }
-        
-        //generate random level for new node to be inserted.
+
         int newLevel = randomLevel();
-
-        //If the new node's level is higher than current level, we update accordingly.
-        if(newLevel > currentLevel) {
-            for(int level = currentLevel; level < newLevel; level++) {
-                update[level] = head;
+        if(newLevel>currentLevel) {
+            for(int level = currentLevel;level<newLevel;level++) {
+                update[level] = head; //it should be the head node which should pe pointing to all the newer levels.
             }
             currentLevel = newLevel;
         }
 
-        //create a new node.
-        Node* newNode = new Node(key, value, newLevel);
-
-        //update forward pointers of new node.
-        for(int level=0; level < newLevel; level++) {
-            newNode->foward[level] = update[level]->forward[level];
+        Node* newNode = new Node(key,value,newLevel);
+        for(int level = 0;level<newLevel;level++) {
+            newNode->forward[level] = update[level]->forward[level];
             update[level]->forward[level] = newNode;
         }
-
-
-
+        return newNode;
     }
 };
