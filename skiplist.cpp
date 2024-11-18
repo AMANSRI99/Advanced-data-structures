@@ -119,6 +119,27 @@ public:
         return newNode;
     }
 
+    vector<Node*> scan(const K& startKey, const K& endKey) {
+        vector<Node*>result;
+        Node* current = head;
+
+        //find starting node.
+        for(int level = currentLevel-1; level>=0; level--) {
+            while(current->forward[level]!=nullptr && current->forward[level]->isSentinel==false && current->forward[level]->Key<startKey) {
+                current=current->forward[level];
+            }
+        }
+
+        current = current->forward[0];
+
+        //collect all nodes in the range.
+        while(current!=nullptr && current->isSentinel==false && current->Key<=endKey) {
+            result.push_back(current);
+            current=current->forward[0];
+        }
+        return result;
+    }
+
     bool remove(const K& key) {
         Node* currNode = head;
         vector<Node*>update(maxLevel,nullptr);
@@ -182,6 +203,9 @@ int main() {
     list.insert("one",1);
     list.insert("two",2);
     list.insert("three",3);
+    list.insert("four",4);
+    list.insert("five",5);
+    list.insert("six",6);
     cout << "After inserting three:" << endl;
 
     list.display();
@@ -202,6 +226,12 @@ int main() {
         cout<<"key not found"<<endl;
     }
     list.display();
+
+    auto scanResult = list.scan("four","three");
+    for(int i=0;i<scanResult.size();i++) {
+        cout<<scanResult[i]->Key<<"("<<scanResult[i]->Value<<")"<<endl;
+    } 
+
 
     return 0;
 }
